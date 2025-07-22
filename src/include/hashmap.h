@@ -67,5 +67,26 @@ unsigned short hashmap_clear(hashmap *map);
 //for resizing checks
 float hashmap_ratio(hashmap *map);
 
+/* LINKED LIST */
+
+//list node - singly linked
+//contains data and pointer to next
+typedef struct node_sl {
+  void *data;
+  struct node_sl *next;
+} node_sl;
+
+//list - points to a head - end of the list is a node pointing to NULL
+typedef node_sl *list_sl;
+
+//return a new list
+list_sl list_new(void);
+
+//push - add an item to the end of a list
+unsigned short list_push(void *data, list_sl list);
+
+//remove - remove and item from the list by value
+unsigned short list_remove(unsigned long idx, list_sl list);
+
 #endif
 
