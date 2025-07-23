@@ -31,14 +31,64 @@ hashmap *hashmap_new(void) {
 //insert a new key-value pair into a hashmap
 //fails if key is already in use
 //returns success status
+//TODO: Finish Func
 unsigned short hashmap_insert(char *key, void *value, hashmap *map) {
+  //NULL checks
+  if (map == NULL || key == NULL) {
+    return 2; //err: NULL args
+  }
+  
+  //check to make sure key is not in use
+  //assign head of bucket to search
+  list_sl itr = map->buckets[fnv_1a(key)%map->size];
 
+  //store strlen in var to save time in strncmps
+  unsigned long key_len = strlen(key);
+  
+  //if key does not exist itr should eventually be null
+  for(; itr != NULL ; itr = itr->next) {
+    //key found
+    if (strncmp(itr->data->key, key, key_len) == 0) {
+      return 3; //err: key already in use
+    }
+  }
+
+  //check to see if resize is necessary
+  if (hashmap_ratio(map) > 0.75) {
+    //double hashmap size
+    //rehash all map entries
+  }
+  
+  //assign head of bucket to search
+  itr = map->buckets[fnv_1a(key)%map->size];
+
+  //if the bucket is empty create a new bucket with a new_kv_pair taking the func args
+  if (itr == NULL) {
+    map->buckets[fnv_1a(key)%map->size] = node_new(kv_pair_new(key, value));
+    return 1; //success
+  }
+
+  //if the bucket exists, append a new kv_pair as the last entry
+  //loop to the end of the list
+  for(; itr->next != NULL; itr = itr->next);
+
+  //create new entry
+  itr->next = node_new(kv_pair_new(key, value));
+
+  return 1; //success
 }
 
 //remove a key-value pair from a hashmap by key, does not return removed value
 //returns success status
+//TODO: Finish Func
 unsigned short hashmap_remove(char *key, hashmap *map) {
-
+  //null checks
+  //hash to bucket
+  //ensure bucket exists
+  //search through bucket for key
+  //if no key found do nothing
+  //if key found unlink from list and free memory
+  return 1; //success
 }
 
 //access a value in a hashmap by key
@@ -82,8 +132,12 @@ void *hashmap_get(char *key, hashmap *map) {
 
 //remove all key-value pairs in a hashmap
 //return success status
+//TODO: Finish Func
 unsigned short hashmap_clear(hashmap *map) {
-
+  //null checks
+  //go through every bucket
+  //free all nodes and then the bucket
+  return 1; //success
 }
 
 //return the ratio of buckets used to hashmap size
