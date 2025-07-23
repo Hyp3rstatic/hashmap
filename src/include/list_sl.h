@@ -1,12 +1,12 @@
-#ifndef LIST_H
-#define LIST_H
+#ifndef LIST_SL_H
+#define LIST_SL_H
 
-#include <stdlib.h> //for memory management
+#include "kv_pair.h" //for key-value pair data structure
 
 //list node - singly linked
 //contains data and pointer to next
 typedef struct node_sl {
-  void *data;
+  kv_pair *data;
   struct node_sl *next;
 } node_sl;
 
@@ -16,7 +16,7 @@ typedef node_sl *list_sl;
 /* NODE FUNCTIONS */
 
 //return a new list node containing data
-node_sl *node_new(void *data);
+node_sl *node_new(kv_pair *data);
 
 /* LINKED LIST FUNCTIONS */
 
@@ -24,7 +24,7 @@ node_sl *node_new(void *data);
 list_sl list_new(void);
 
 //push - add an item to the end of a list
-unsigned short list_push(void *data, list_sl list);
+unsigned short list_push(kv_pair *data, list_sl list);
 
 //remove - remove and item from the list by value
 unsigned short list_remove(unsigned long idx, list_sl list);

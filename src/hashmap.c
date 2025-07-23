@@ -1,29 +1,5 @@
 #include "include/hashmap.h"
 
-/* KV_PAIR FUNCTIONS */
-
-//return memory address for a new kv_pair
-kv_pair *kv_pair_new(char *key, void *value) {
-  //fail if key or value is null
-  if (key == NULL || value == NULL) {
-    return NULL; //failed
-  }
-
-  //allocate memory for a kv_pair struct
-  kv_pair *new_pair = (kv_pair *)malloc(sizeof(kv_pair));
-  
-  //allocate memory for the key
-  new_pair->key = (char *)malloc((strlen(key) + 1) * sizeof(char));
-  //assign key
-  //plus one ensures null termination
-  strncpy(new_pair->key, key, strlen(key) + 1);
-
-  //assign value
-  new_pair->value = value;
-
-  return new_pair;
-}
-
 /* HASHMAP FUNCTIONS */
 
 //note: the challenge of a hashmap rn is managing the size
@@ -67,7 +43,41 @@ unsigned short hashmap_remove(char *key, hashmap *map) {
 
 //access a value in a hashmap by key
 void *hashmap_get(char *key, hashmap *map) {
+  //NULL checks
+  if (key == NULL || map == NULL) {
+    return NULL; //err: NULL args
+  }
 
+  //hash to bucket index
+  unsigned long hash = fnv_1a(key);
+  unsigned long idx = hash%map->size;
+
+  //assign head of bucket to search
+  list_sl itr = map->buckets[idx];
+
+  //store strlen in var to save time in strncmps
+  unsigned long key_len = strlen(key);
+  
+  //NULL check
+  if (itr == NULL) {
+    return NULL; //err: pair does not exist
+  }
+
+  for(;;) {
+    //key found
+    if (strncmp(itr->data->key, key, key_len) == 0) {
+      return itr->data;
+    }
+    //NULL check
+    if (itr->next == NULL) {
+      return NULL; //err: pair does not exist
+    }
+
+    //go to next entry
+    itr = itr->next;
+  }
+
+  return NULL; //err: pair does not exist
 }
 
 //remove all key-value pairs in a hashmap

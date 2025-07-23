@@ -1,9 +1,9 @@
-#include "include/list.h"
+#include "include/list_sl.h"
 
 /* NODE FUNCTIONS */
 
 //return a new node
-node_sl *node_new(void *data) {
+node_sl *node_new(kv_pair *data) {
   //allocate new node memory
   node_sl *new_node = (node_sl *)malloc(sizeof(node_sl));
 
@@ -26,7 +26,7 @@ list_sl list_new(void) {
 
 //push - add an item to the end of a list
 //use: list_push((typecast *)data, list)
-unsigned short list_push(void *data, list_sl list) {
+unsigned short list_push(kv_pair *data, list_sl list) {
   //empty list
   if (list == NULL) {
     //assign list head

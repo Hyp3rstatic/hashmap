@@ -1,21 +1,13 @@
 #ifndef HASHMAP_H
 #define HASHMAP_H
 
-#include <string.h> //for string utilities
-#include "list.h" //for bucket data structure
+#include "list_sl.h" //for bucket data structure
+#include "fnv_1a.h" //for hashing function
 
 /* defining the core functionality for a hashmap
     keys will be char pointers, and values will be void pointers
     being kept as simple as possible for now
 */
-
-/* struct for a key-value pair */
-/* intended only for use in a hashmap */
-/* user does not directly interact with when interfacing with hashmap functionality */
-typedef struct {
-  char *key;
-  void *value;
-} kv_pair;
 
 /* keys are unique, value are not */
 typedef struct {
@@ -23,12 +15,6 @@ typedef struct {
   unsigned long size; //to keep track of size without needing to iterate
   unsigned long used; //keep track of buckets in use
 } hashmap;
-
-/* KV_PAIR FUNCTIONS */
-
-//return memory address for a new kv_pair
-//type determines which cast is done on the value
-kv_pair *kv_pair_new(char *key, void *value);
 
 /* HASHMAP FUNCTIONS */
 
@@ -56,5 +42,7 @@ unsigned short hashmap_clear(hashmap *map);
 //return the ratio of buckets used to hashmap size
 //for resizing checks
 float hashmap_ratio(hashmap *map);
+
+unsigned long fnv_1a(char *key);
 
 #endif
