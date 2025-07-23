@@ -18,7 +18,7 @@ hashmap *hashmap_new(void) {
   //assign default vals
   new_map->size = size;
   new_map->used = 0;
-  new_map->buckets = (head_sl **)malloc(sizeof(head_sl *) * size);
+  new_map->buckets = (head_sl **)malloc(sizeof(head_sl *) * new_map->size);
 
   //blank all buckets
   for(unsigned short i = 0; i < new_map->size; i++) {
@@ -39,24 +39,83 @@ unsigned short hashmap_insert(char *key, void *value, hashmap *map) {
   }
   
   //check to make sure key is not in use
-  //assign head of bucket to search
-  node_sl *itr = map->buckets[fnv_1a(key)%map->size];
+  node_sl *itr = NULL; //create itr for buckets
 
   //store strlen in var to save time in strncmps
   unsigned long key_len = strlen(key);
   
   //if key does not exist itr should eventually be null
-  for(; itr != NULL ; itr = itr->next) {
+  for(itr = map->buckets[fnv_1a(key)%map->size]; itr != NULL; itr = itr->next) {
     //key found
     if (strncmp(itr->data->key, key, key_len) == 0) {
       return 3; //err: key already in use
     }
   }
 
+  //transfer all kv_pairs in the old map to the new map
+    //go through every bucket, for every non null bucket:
+      //for every entry, rehash key into new map, free the node
+      //go to the next node (have it saved before free)
+    //once all nodes are free, free the bucket
+  //once all buckets are free, free the map
+  //set map to the new map
+
   //check to see if resize is necessary
+  //TODO: after resize, another resize may be necessary :(
+  //turn resize into a function, then keep calling until ratio is satisfied
   if (hashmap_ratio(map) > 0.75) {
-    //double hashmap size
-    //rehash all map entries
+    map->size = map->size * 2; // double capacity
+    map->used = 0; //set used to 0
+     //create new buckets with doubled capcity
+    head_sl **new_buckets = (head_sl **)malloc(sizeof(head_sl *) * map->size);
+    
+    //blank new buckets
+    for(unsigned long i = 0; i < map->size; i++) {
+      new_buckets[i] = NULL;
+    }
+    
+    //ok to divide by 2 since the sizes are all multiple of 2
+    //loop through all buckets
+    for(unsigned long i = 0; i < map->size/2; i++) {
+      if (map->buckets[i] == NULL) {
+        continue;
+      }
+
+      for(itr = map->buckets[i]; itr != NULL;) {
+        //hash into new buckets
+        //assign head of bucket to search
+        node_sl *itr_new_buckets = new_buckets[fnv_1a(key)%map->size];
+
+        //if the bucket is empty create a new bucket with a new_kv_pair taking the func args
+        if (itr_new_buckets == NULL) {
+          new_buckets[fnv_1a(key)%map->size] = itr;
+          map->used += 1;
+        }
+
+        else {
+          //if the bucket exists, append a new kv_pair as the last entry
+          //loop to the end of the list
+          for(; itr_new_buckets->next != NULL; itr_new_buckets = itr_new_buckets->next);
+
+          //move entry
+          itr_new_buckets->next = itr; 
+        }
+        
+        node_sl *moved_node = itr;
+        moved_node->next = NULL; //set next to NULL in new bucket
+
+        itr = itr->next;
+      }
+
+      //free bucket
+      free(map->buckets[i]);
+    }
+    
+    //free buckets
+    free(map->buckets);
+
+    //set new buckets
+    map->buckets = new_buckets;
   }
   
   //assign head of bucket to search
