@@ -63,9 +63,8 @@ unsigned short hashmap_insert(char *key, void *value, hashmap *map) {
   //check to see if resize is necessary
   //TODO: after resize, another resize may be necessary :(
   //turn resize into a function, then keep calling until ratio is satisfied
-  if (hashmap_ratio(map) > 0.75) {
+  if (hashmap_ratio(map) >= 0.75) {
     map->size = map->size * 2; // double capacity
-    map->used = 0; //set used to 0
      //create new buckets with doubled capcity
     head_sl **new_buckets = (head_sl **)malloc(sizeof(head_sl *) * map->size);
     
@@ -84,12 +83,11 @@ unsigned short hashmap_insert(char *key, void *value, hashmap *map) {
       for(itr = map->buckets[i]; itr != NULL;) {
         //hash into new buckets
         //assign head of bucket to search
-        node_sl *itr_new_buckets = new_buckets[fnv_1a(key)%map->size];
+        node_sl *itr_new_buckets = new_buckets[fnv_1a(itr->data->key)%map->size];
 
         //if the bucket is empty create a new bucket with a new_kv_pair taking the func args
         if (itr_new_buckets == NULL) {
-          new_buckets[fnv_1a(key)%map->size] = itr;
-          map->used += 1;
+          new_buckets[fnv_1a(itr->data->key)%map->size] = itr;
         }
 
         else {
@@ -102,28 +100,27 @@ unsigned short hashmap_insert(char *key, void *value, hashmap *map) {
         }
         
         node_sl *moved_node = itr;
-        moved_node->next = NULL; //set next to NULL in new bucket
 
         itr = itr->next;
-      }
 
-      //free bucket
-      free(map->buckets[i]);
+        moved_node->next = NULL; //set next to NULL in new bucket
+      }
     }
-    
+  
     //free buckets
     free(map->buckets);
 
     //set new buckets
     map->buckets = new_buckets;
   }
-  
+
   //assign head of bucket to search
   itr = map->buckets[fnv_1a(key)%map->size];
 
   //if the bucket is empty create a new bucket with a new_kv_pair taking the func args
   if (itr == NULL) {
     map->buckets[fnv_1a(key)%map->size] = node_new(kv_pair_new(key, value));
+    map->used += 1;
     return 1; //success
   }
 
@@ -175,7 +172,7 @@ void *hashmap_get(char *key, hashmap *map) {
   for(;;) {
     //key found
     if (strncmp(itr->data->key, key, key_len) == 0) {
-      return itr->data;
+      return itr->data->value;
     }
     //NULL check
     if (itr->next == NULL) {
@@ -202,9 +199,84 @@ unsigned short hashmap_clear(hashmap *map) {
 //return the ratio of buckets used to hashmap size
 //for resizing checks
 float hashmap_ratio(hashmap *map) {
-  return (map->used/map->size);
+  return ((float)map->used/(float)map->size);
+}
+
+#include <stdio.h>
+
+void test_value(char *key, char *val, hashmap *map) {
+  printf("\n");
+  printf("INSERTING INTO HASHMAP | CAPACITY: %lu\n", map->size);
+  char *value_insert = (char *)malloc((strlen(val) + 1) *sizeof(char));
+  strncpy(value_insert, val, strlen(val) + 1);
+  printf("CAPACITY: %lu | USED: %lu | RATIO: %f\n", map->size, map->used, hashmap_ratio(map));
+  hashmap_insert(key, (char *)value_insert, map);
+  char *value_retrieved = (char *)hashmap_get(key, map);
+  printf("INSERTED VALUE: %s | USING KEY: %s | GOT VALUE: %s\n", value_insert, key, (char *)value_retrieved);
+  printf("\n");
 }
 
 int main(int argc, char *argv[]) {
+  printf("CREATING NEW HASHMAP\n");
+  hashmap *map = hashmap_new();
+
+  test_value("dogs", "woof", map);
+  test_value("dogs", "meow", map);//shouldn't update
+  test_value("butter", "milk", map);
+  test_value("woopie", "cushion", map);
+  test_value("strawberry", "lemonade", map);
+  test_value("womps", "fortress", map);
+  test_value("eric", "cartman", map);
+  test_value("harold", "crayon", map);
+  test_value("mister", "E", map);
+  test_value("timothy", "himsle", map);
+  test_value("wegot", "those", map);
+  test_value("tony", "hawk", map);
+  test_value("kick", "flip", map);
+  test_value("loof", "laws", map);
+  test_value("apple", "comp", map);
+  test_value("surf", "board", map);
+  test_value("happy", "golucky", map);
+  test_value("think", "tdm", map);
+  test_value("whats", "up", map);
+  test_value("hold", "that", map);
+  //at capacity ^^^
+
+  test_value("Iaint", "scared", map);
+
+  printf("retrieved: %s\n", (char *)hashmap_get("dogs", map));
+
+  test_value("go", "away", map);
+  test_value("program", "language", map);
+  test_value("ihate", "work", map);
+
+  //none should update
+
+  test_value("dogs", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("dogs", "BBBBBBBBBBBBBBBBBBBBBBBB", map);
+  test_value("butter", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("woopie", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("strawberry", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("womps", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("eric", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("harold", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("mister", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("timothy", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("wegot", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("tony", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("kick", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("loof", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("apple", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("surf", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("happy", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("think", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("whats", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("hold", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("Iaint", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("go", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("program", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("ihate", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+
+  printf("END\n");
   return 0;
 }
