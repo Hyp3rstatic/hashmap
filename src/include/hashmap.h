@@ -11,7 +11,7 @@
 
 /* keys are unique, value are not */
 typedef struct {
-  list_sl *buckets; //an array of lists used to store k-v pairs within buckets
+  head_sl **buckets; //an array of lists used to store k-v pairs within buckets
   unsigned long size; //to keep track of size without needing to iterate
   unsigned long used; //keep track of buckets in use
 } hashmap;

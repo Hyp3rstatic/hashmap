@@ -18,7 +18,7 @@ hashmap *hashmap_new(void) {
   //assign default vals
   new_map->size = size;
   new_map->used = 0;
-  new_map->buckets = (list_sl *)malloc(sizeof(list_sl) * size);
+  new_map->buckets = (head_sl **)malloc(sizeof(head_sl *) * size);
 
   //blank all buckets
   for(unsigned short i = 0; i < new_map->size; i++) {
@@ -40,7 +40,7 @@ unsigned short hashmap_insert(char *key, void *value, hashmap *map) {
   
   //check to make sure key is not in use
   //assign head of bucket to search
-  list_sl itr = map->buckets[fnv_1a(key)%map->size];
+  node_sl *itr = map->buckets[fnv_1a(key)%map->size];
 
   //store strlen in var to save time in strncmps
   unsigned long key_len = strlen(key);
@@ -103,7 +103,7 @@ void *hashmap_get(char *key, hashmap *map) {
   unsigned long idx = hash%map->size;
 
   //assign head of bucket to search
-  list_sl itr = map->buckets[idx];
+  node_sl *itr = map->buckets[idx];
 
   //store strlen in var to save time in strncmps
   unsigned long key_len = strlen(key);

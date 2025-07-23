@@ -1,41 +1,25 @@
 #include "include/list_sl.h"
 
-/* NODE FUNCTIONS */
-
-//return a new node
-node_sl *node_new(kv_pair *data) {
-  //allocate new node memory
-  node_sl *new_node = (node_sl *)malloc(sizeof(node_sl));
-
-  //set data;
-  new_node->data = data;
-
-  //set next to NULL
-  new_node->next = NULL;
-
-  return new_node;
-}
-
 /* LIST FUNCTIONS */
 
-//return a new list
-list_sl list_new(void) {
-  list_sl new_list = NULL;
-  return new_list;
+//return a new list head
+head_sl *list_new(void) {
+  head_sl *new_list_head = NULL;
+  return new_list_head;
 }
 
 //push - add an item to the end of a list
 //use: list_push((typecast *)data, list)
-unsigned short list_push(kv_pair *data, list_sl list) {
+unsigned short list_push(kv_pair *data, head_sl *list_head) {
   //empty list
-  if (list == NULL) {
+  if (list_head == NULL) {
     //assign list head
-    list = node_new(data);
+    list_head = node_new(data);
     return 1;
   }
 
   //create a node for iterating through the list
-  node_sl *itr = list;
+  node_sl *itr = list_head;
 
   //search for the node with a NULL next to insert the new node
   for (;;) {
@@ -52,9 +36,9 @@ unsigned short list_push(kv_pair *data, list_sl list) {
 
 //remove - remove and item from the list by value
 //does nothing if idx exceeds list length
-unsigned short list_remove(unsigned long idx, list_sl list) {
+unsigned short list_remove(unsigned long idx, head_sl *list_head) {
 
-  if (list == NULL) {
+  if (list_head == NULL) {
     return 2; //err: empty list
   }
 
@@ -63,14 +47,14 @@ unsigned short list_remove(unsigned long idx, list_sl list) {
 
   //removing head
   if (idx == 0) {
-    free_node = list;
-    list = list->next;
+    free_node = list_head;
+    list_head = list_head->next;
     free(free_node->data); //free data in node;
     free(free_node); //free node
     return 1; //success
   }
 
-  node_sl *itr = list;
+  node_sl *itr = list_head;
 
   //iterate through list to idx, break if there are no more nodes to go to
   //list is starting at first index 0, before the loop begins
