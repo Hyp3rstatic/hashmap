@@ -15,6 +15,7 @@ head_sl *list_new(void);
 unsigned short list_push(kv_pair *data, head_sl *list_head);
 
 //remove - remove and item from the list by index
-unsigned short list_remove(unsigned long idx, head_sl *list_head);
+//list_head is a pointer to pointer so it can be set to null in the event the list is emptied
+void *list_remove(unsigned long idx, head_sl **list_head);
 
 #endif

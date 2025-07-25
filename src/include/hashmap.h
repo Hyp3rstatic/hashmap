@@ -28,13 +28,14 @@ unsigned short hashmap_insert(char *key, void *value, hashmap *map);
 
 //remove a key-value pair from a hashmap by key, does not return removed value
 //returns success status
-unsigned short hashmap_remove(char *key, hashmap *map);
+void *hashmap_remove(char *key, hashmap *map);
 
 //access a value in a hashmap by key
 void *hashmap_get(char *key, hashmap *map);
 
 //remove all key-value pairs in a hashmap
 //return success status
+//return should give back a list of all values for user to manage as they wish
 unsigned short hashmap_clear(hashmap *map);
 
 /* extra functions for convenience */

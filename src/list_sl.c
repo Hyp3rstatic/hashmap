@@ -34,12 +34,14 @@ unsigned short list_push(kv_pair *data, head_sl *list_head) {
   }
 }
 
+#include <stdio.h> //debug
 //remove - remove and item from the list by value
 //does nothing if idx exceeds list length
-unsigned short list_remove(unsigned long idx, head_sl *list_head) {
+//list_head is a pointer to pointer so it can be set to null in the event the list is emptied
+void *list_remove(unsigned long idx, head_sl **list_head) {
 
-  if (list_head == NULL) {
-    return 2; //err: empty list
+  if (*list_head == NULL) {
+    return NULL; //err: empty list
   }
 
   //the var used to free any nodes
@@ -47,14 +49,22 @@ unsigned short list_remove(unsigned long idx, head_sl *list_head) {
 
   //removing head
   if (idx == 0) {
-    free_node = list_head;
-    list_head = list_head->next;
+    free_node = *list_head;
+    *list_head = (*list_head)->next;
+
+    //hashmap exclusives
+    free(free_node->data->key); //free key;
+    void *value = free_node->data->value; //value to return;
+
     free(free_node->data); //free data in node;
     free(free_node); //free node
-    return 1; //success
+
+    printf("LIST HEAD: %p\n", list_head); //debug
+    printf("FREE NODE: %p\n", free_node); //debug
+    return value; //success
   }
 
-  node_sl *itr = list_head;
+  node_sl *itr = *list_head;
 
   //iterate through list to idx, break if there are no more nodes to go to
   //list is starting at first index 0, before the loop begins
@@ -63,14 +73,14 @@ unsigned short list_remove(unsigned long idx, head_sl *list_head) {
   for (int i = 1; i < idx; i++) {
     //check if there are any nodes to go to
     if(itr->next == NULL) {
-      return 3; //err: node not in list
+      return NULL; //err: node not in list
     }
     itr = itr->next;
   }
 
   //fail if target node does not exist
   if (itr->next == NULL) {
-    return 3; //err: node not in list
+    return NULL; //err: node not in list
   }
  
   free_node = itr->next;
@@ -78,8 +88,11 @@ unsigned short list_remove(unsigned long idx, head_sl *list_head) {
   //unlink node to be removed
   itr->next = itr->next->next;
 
+  free(free_node->data->key); //free key;
+  void *value = free_node->data->value; //value to return;
+
   free(free_node->data); //free data in node;
   free(free_node); //free node
 
-  return 1; //success
+  return value; //success
 }

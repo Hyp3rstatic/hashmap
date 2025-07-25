@@ -134,17 +134,32 @@ unsigned short hashmap_insert(char *key, void *value, hashmap *map) {
   return 1; //success
 }
 
-//remove a key-value pair from a hashmap by key, does not return removed value
-//returns success status
+#include <stdio.h> //debug
+//remove a key-value pair from a hashmap by key
+//return removed value: up to user to handle data mem management
 //TODO: Finish Func
-unsigned short hashmap_remove(char *key, hashmap *map) {
-  //null checks
-  //hash to bucket
-  //ensure bucket exists
-  //search through bucket for key
-  //if no key found do nothing
-  //if key found unlink from list and free memory
-  return 1; //success
+//use list remove
+void *hashmap_remove(char *key, hashmap *map) {
+  if (key == NULL || map == NULL) {
+    return NULL; //err: null args
+  }
+
+  //assign itr to head of bucket being searched
+  node_sl *itr = map->buckets[fnv_1a(key)%map->size];
+
+  //jank but convenient 'for' conditions
+  for(unsigned long i = 0, key_len = strlen(key); itr != NULL; itr = itr->next, i++) {
+    if (strncmp(itr->data->key, key, key_len) == 0) {
+      //if bucket is freed decrement capacity
+      if(map->buckets[fnv_1a(key)%map->size]->next == NULL) {
+        printf("BUCKET WILL BE EMPTIED\n"); //debug
+        --map->used;
+      }
+      return list_remove(i, &map->buckets[fnv_1a(key)%map->size]); //remove and free node/bucket
+    }
+  }
+  
+  return NULL; //err: pair does not exist
 }
 
 //access a value in a hashmap by key
@@ -202,7 +217,24 @@ float hashmap_ratio(hashmap *map) {
   return ((float)map->used/(float)map->size);
 }
 
-#include <stdio.h>
+
+//#include <stdio.h>
+
+void print_map(hashmap *map) {
+  for(unsigned long i = 0; i < map->size; i++){
+    if(map->buckets[i] == NULL)
+      continue;
+
+    printf("[%lu]: ", i);
+
+    node_sl *itr = map->buckets[i];
+    for(; itr != NULL; itr = itr->next) {
+      printf("{%s, %s}", itr->data->key, (char *)itr->data->value);
+    }
+    printf("\n");
+  }
+  printf("END MAP PRINT\n");
+}
 
 void test_value(char *key, char *val, hashmap *map) {
   printf("\n");
@@ -250,7 +282,7 @@ int main(int argc, char *argv[]) {
   test_value("program", "language", map);
   test_value("ihate", "work", map);
 
-  //none should update
+  //none should update down below
 
   test_value("dogs", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
   test_value("dogs", "BBBBBBBBBBBBBBBBBBBBBBBB", map);
@@ -277,6 +309,40 @@ int main(int argc, char *argv[]) {
   test_value("program", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
   test_value("ihate", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
 
+
+  //not freeing any returned values in test for now
+  char *key = "program";
+  printf("Removed: %s, Got: %s\n", key, (char *)hashmap_remove(key, map));
+  printf("Used after removal: %lu\n", map->used);
+  
+  test_value("program", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+
+  key = "ihate";
+  printf("Removed: %s, Got: %s\n", key, (char *)hashmap_remove(key, map));
+  printf("Used after removal: %lu\n", map->used);
+  
+  test_value("ihate", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+
+  key = "program";
+  
+  printf("Removed: %s, Got: %s\n", key, (char *)hashmap_remove(key, map));
+
+  test_value("program", "BBBBBBBBBBBBBBBBBBBBBBBB", map);
+
+  key = "hold";
+
+  print_map(map);
+  
+  printf("Removed: %s, Got: %s\n", key, (char *)hashmap_remove(key, map));
+
+  printf("%p\n", map->buckets[24]);
+
+  print_map(map);
+  //some seg fault after removing last value in bucket and then trying to insert :(
+  test_value("hold", "CCCCCCCCCCCCCCCCCCCCCCCC", map);
+  
+  print_map(map);
   printf("END\n");
+
   return 0;
 }
