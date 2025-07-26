@@ -134,7 +134,6 @@ unsigned short hashmap_insert(char *key, void *value, hashmap *map) {
   return 1; //success
 }
 
-#include <stdio.h> //debug
 //remove a key-value pair from a hashmap by key
 //return removed value: up to user to handle data mem management
 //TODO: Finish Func
@@ -152,8 +151,7 @@ void *hashmap_remove(char *key, hashmap *map) {
     if (strncmp(itr->data->key, key, key_len) == 0) {
       //if bucket is freed decrement capacity
       if(map->buckets[fnv_1a(key)%map->size]->next == NULL) {
-        printf("BUCKET WILL BE EMPTIED\n"); //debug
-        --map->used;
+        map->used -= 1;
       }
       return list_remove(i, &map->buckets[fnv_1a(key)%map->size]); //remove and free node/bucket
     }
@@ -201,14 +199,53 @@ void *hashmap_get(char *key, hashmap *map) {
   return NULL; //err: pair does not exist
 }
 
+#include <stdio.h> //debug
 //remove all key-value pairs in a hashmap
 //return success status
 //TODO: Finish Func
-unsigned short hashmap_clear(hashmap *map) {
-  //null checks
-  //go through every bucket
-  //free all nodes and then the bucket
-  return 1; //success
+//return should give back an array of all values for user to manage as they wish
+void **hashmap_clear(hashmap *map) {
+  if (map == NULL) {
+    return NULL; //err: hashmap does not exist
+  }
+
+  //set used to 0
+  map->used = 0;
+  
+  //array with all values
+  void **value_arr = NULL;
+  unsigned long value_arr_len = 0;
+
+  for(unsigned long i = 0; i < map->size; i++) {
+    
+    while(map->buckets[i] != NULL) {
+      value_arr = (void **)realloc(value_arr, value_arr_len++ * sizeof(void *));
+      //printf("arrlen: %lu\n", value_arr_len); //debug
+      //printf("key: %s\n", map->buckets[i]->data->key); //debug
+      void *cleared_val = hashmap_remove(map->buckets[i]->data->key, map);
+
+      //printf("returned value: %s\n", (char *)hashmap_remove(map->buckets[i]->data->key, map)); //debug
+      
+      //there is a problem in remove causing memory to be freed that shouldn't be //debug
+      value_arr[value_arr_len-1] = cleared_val;
+      printf("idx: %lu value: %s\n", value_arr_len, value_arr[value_arr_len-1]);
+  //debug
+  printf("{");
+  for(unsigned long i = 0; i < value_arr_len; i++) {
+    printf("%lu: %s ", i, value_arr[i]);
+  }
+  printf("}\n");
+    }
+  }
+
+  //debug
+  printf("{");
+  for(unsigned long i = 0; i < value_arr_len; i++) {
+    printf("%lu: %s ", i, value_arr[i]);
+  }
+  printf("}\n");
+
+  return value_arr; //success
 }
 
 //return the ratio of buckets used to hashmap size
@@ -217,34 +254,31 @@ float hashmap_ratio(hashmap *map) {
   return ((float)map->used/(float)map->size);
 }
 
-
-//#include <stdio.h>
-
 void print_map(hashmap *map) {
   for(unsigned long i = 0; i < map->size; i++){
-    if(map->buckets[i] == NULL)
+    if(map->buckets[i] == NULL) {
       continue;
+    }
 
     printf("[%lu]: ", i);
 
     node_sl *itr = map->buckets[i];
     for(; itr != NULL; itr = itr->next) {
-      printf("{%s, %s}", itr->data->key, (char *)itr->data->value);
+      printf("{%s: %s} ", itr->data->key, (char *)itr->data->value);
     }
     printf("\n");
   }
-  printf("END MAP PRINT\n");
 }
 
 void test_value(char *key, char *val, hashmap *map) {
   printf("\n");
-  printf("INSERTING INTO HASHMAP | CAPACITY: %lu\n", map->size);
   char *value_insert = (char *)malloc((strlen(val) + 1) *sizeof(char));
   strncpy(value_insert, val, strlen(val) + 1);
-  printf("CAPACITY: %lu | USED: %lu | RATIO: %f\n", map->size, map->used, hashmap_ratio(map));
+  printf("PRE - USE: %lu CAP: %lu | RAT: %f\n", map->used, map->size, hashmap_ratio(map));
   hashmap_insert(key, (char *)value_insert, map);
+  printf("POS - USE: %lu CAP: %lu | RAT: %f\n", map->used, map->size, hashmap_ratio(map));
   char *value_retrieved = (char *)hashmap_get(key, map);
-  printf("INSERTED VALUE: %s | USING KEY: %s | GOT VALUE: %s\n", value_insert, key, (char *)value_retrieved);
+  printf("INS: %s | KEY: %s | RET: %s\n", value_insert, key, (char *)value_retrieved);
   printf("\n");
 }
 
@@ -338,10 +372,53 @@ int main(int argc, char *argv[]) {
   printf("%p\n", map->buckets[24]);
 
   print_map(map);
-  //some seg fault after removing last value in bucket and then trying to insert :(
   test_value("hold", "CCCCCCCCCCCCCCCCCCCCCCCC", map);
   
   print_map(map);
+
+  //SO MANY BUGS
+
+  printf("CLEAR TEST\n");
+
+  void **pointer_arr = hashmap_clear(map);
+  //unsigned long arr_len =(sizeof(pointer_arr));
+  //printf("%lu {", arr_len);
+  printf("{");
+  for(unsigned long i = 0; i < 10; i++) {
+    printf("%lu: %s ", i, pointer_arr[i]);
+  }
+  printf("}\n");
+
+  print_map(map);
+
+  /*
+  test_value("dogs", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("dogs", "BBBBBBBBBBBBBBBBBBBBBBBB", map);
+  test_value("butter", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("woopie", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("strawberry", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("womps", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("eric", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("harold", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("mister", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("timothy", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("wegot", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("tony", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("kick", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("loof", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("apple", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("surf", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("happy", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("think", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("whats", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("hold", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("Iaint", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("go", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("program", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+  test_value("ihate", "AAAAAAAAAAAAAAAAAAAAAAAA", map);
+*/
+  print_map(map);
+
   printf("END\n");
 
   return 0;

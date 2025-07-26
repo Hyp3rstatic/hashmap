@@ -34,7 +34,6 @@ unsigned short list_push(kv_pair *data, head_sl *list_head) {
   }
 }
 
-#include <stdio.h> //debug
 //remove - remove and item from the list by value
 //does nothing if idx exceeds list length
 //list_head is a pointer to pointer so it can be set to null in the event the list is emptied
@@ -58,9 +57,7 @@ void *list_remove(unsigned long idx, head_sl **list_head) {
 
     free(free_node->data); //free data in node;
     free(free_node); //free node
-
-    printf("LIST HEAD: %p\n", list_head); //debug
-    printf("FREE NODE: %p\n", free_node); //debug
+    
     return value; //success
   }
 

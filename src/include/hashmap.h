@@ -35,8 +35,8 @@ void *hashmap_get(char *key, hashmap *map);
 
 //remove all key-value pairs in a hashmap
 //return success status
-//return should give back a list of all values for user to manage as they wish
-unsigned short hashmap_clear(hashmap *map);
+//return should give back an array of all values for user to manage as they wish
+void **hashmap_clear(hashmap *map);
 
 /* extra functions for convenience */
 
