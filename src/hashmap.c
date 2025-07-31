@@ -200,8 +200,6 @@ void *hashmap_get(char *key, hashmap *map) {
 }
 
 //remove all key-value pairs in a hashmap
-//return success status
-//TODO: Finish Func
 //return should give back an array of all values for user to manage as they wish
 void **hashmap_clear(hashmap *map) {
   if (map == NULL) {
